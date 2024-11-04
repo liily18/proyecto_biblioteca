@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+ 
+<div class="container mt-5">
+        <table class="table table-bordered table-striped table-success">
+          <thead>
+            <tr>
+              <th scope="col">
+                <div class="text-center">Libro</div>
+                
+              </th>
+              <th scope="col">
+                <div class="text-center">Autor</div>
+                
+              </th>
+              <th scope="col">
+                <div class="text-center">Categoria</div>
+              </th>
+
+              <th scope="col">
+                <div class="text-center"></div>
+              </th>
+         
+            </tr>
+          </thead>
+          <tbody>
+            {% for arriendo in arriendos %}
+            <tr>
+                <td>{{ arriendo.libro.nombre }}</td>
+                <td>{{ arriendo.libro.autor }}</td>
+                <td>{{ arriendo.libro.categoria }}</td>
+                <td>
+                    <a href="{% url 'devolver' arriendo.libro.id %}" class="btn btn-info">Retornar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+      
+      </div>
+    </div>
+   
+{% endblock %}
