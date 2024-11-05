@@ -10,7 +10,9 @@ from django.contrib.auth import authenticate, login
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from .models import *
-from .forms import CategoriaFilterForm
+from .forms import CategoriaFilterForm, LibroForm
+
+
 
 @login_required 
 def index(request):
@@ -81,9 +83,9 @@ def arrendar(request, libro_id):
                 'fecha': fecha, 
             })
 
-        # Crear el nuevo arriendo
+        # Crear el nuevo arriendo con la fecha en `fecha_arriendo`
         nuevo_arriendo = Arriendo.objects.create(
-            fecha=fecha,
+            fecha_arriendo=fecha_seleccionada,
             user=request.user,
             libro=libro
         )
@@ -101,20 +103,79 @@ def arrendar(request, libro_id):
     })
 
 
-    
 
 @login_required
 def misArriendos(request):
     arriendos = Arriendo.objects.filter(user=request.user).select_related('libro')
 
-    return render(request, 'mis_arriendos.html', {'arriendos': arriendos})
+    libros_data = []
+
+    for arriendo in arriendos:
+        libro = arriendo.libro
+        fecha_arriendo = arriendo.fecha_arriendo 
+        dias_arriendo = libro.tipo.dias_arriendo if libro.tipo else 0
+        fecha_devolucion = fecha_arriendo + timedelta(days=dias_arriendo) if fecha_arriendo else None
+
+        # Calcula multa si la fecha de devolución ha pasado
+        multa = 0
+        if fecha_devolucion and date.today() > fecha_devolucion:
+            dias_atraso = (date.today() - fecha_devolucion).days
+            multa = dias_atraso * libro.tipo.precio_dias_atraso if libro.tipo else 0
+
+        # Agrega los datos calculados a un diccionario
+        libros_data.append({  
+            'id': libro.id,
+            'nombre': libro.nombre,
+            'autor': libro.autor,
+            'categoria': libro.categoria,
+            'fecha_arriendo': fecha_arriendo,
+            'fecha_devolucion': fecha_devolucion,
+            'multa': multa,
+        })
+
+    return render(request, 'mis_arriendos.html', {'libros_data': libros_data})
 
 
+
+
+@login_required
 def devolver(request, libro_id):
-    libro = get_object_or_404(Libro, id= libro_id)
+    libro = get_object_or_404(Libro, id=libro_id)
+    arriendo = get_object_or_404(Arriendo, libro=libro, user=request.user)
+
+    # Calcular la fecha de devolución esperada y la multa si está atrasado
+    dias_arriendo = libro.tipo.dias_arriendo if libro.tipo else 0
+    fecha_devolucion_esperada = arriendo.fecha_arriendo + timedelta(days=dias_arriendo)
+    dias_atraso = (date.today() - fecha_devolucion_esperada).days
+    multa = 0
+
+    if dias_atraso > 0:
+        # Calcular la multa por los días de atraso
+        multa = dias_atraso * libro.tipo.precio_dias_atraso if libro.tipo else 0
+        messages.warning(
+            request,
+            f"El libro '{libro.nombre}' se retornó con {dias_atraso} días de atraso, generando una multa de ${multa}."
+        )
+    else:
+        messages.success(request, f"El libro '{libro.nombre}' fue devuelto sin problemas.")
+
+    # Actualizar el estado del libro a disponible
     libro.disponible = True
     libro.save()
+    
+    # Eliminar o marcar el arriendo como completado (según tu lógica)
+    arriendo.delete()  # O marca como completado si deseas conservar el registro
 
-    Arriendo.objects.filter(libro=libro, user=request.user).delete()
-    messages.success(request, 'Libro devuelto, Gracias por su preferencia.')
-    return redirect('index')  
+    return redirect('misarriendos')  # Redirigir a la vista de arriendos
+
+
+def agregar_libro(request):
+    if request.method == 'POST':
+        form = LibroForm(request.POST)
+        if form.is_valid():
+            form.save()  # Guarda el nuevo libro en la base de datos
+            messages.success(request, "Libro agregado exitosamente.")
+            return redirect('misarriendos')  # Cambia 'misarriendos' por la URL que deseas redirigir
+    else:
+        form = LibroForm()
+    return render(request, 'agregar_libro.html', {'form': form})

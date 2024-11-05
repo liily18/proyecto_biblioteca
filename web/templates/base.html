@@ -27,6 +27,14 @@
   {% block message %}
   {% if messages %}
   {% for message in messages %}
+<script>
+  // Espera 5 segundos y luego oculta la alerta
+  setTimeout(function() {
+    $('.alert').fadeOut('slow', function() {
+      $(this).alert('close');
+    });
+  }, 5000); // 5000 ms
+</script>
   <div class="container">
     <div class="row">
       <div class="col">

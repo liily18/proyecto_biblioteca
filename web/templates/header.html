@@ -12,7 +12,7 @@
         </li>
         {% if user.is_staff %}
         <li class="nav-item">
-          <a class="nav-link text-light" href="">Agregar Libro</a>
+          <a class="nav-link text-light" href="{% url 'agregar_libro' %}">Agregar Libro</a>
         </li>
         {% endif %}
         <li class="nav-item">

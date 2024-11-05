@@ -17,7 +17,14 @@
               <th scope="col">
                 <div class="text-center">Categoria</div>
               </th>
-
+              <th scope="col">
+                <div class="text-center">Fecha Devolución</div>
+              </th>
+              
+              <th scope="col">
+                <div class="text-center">Multa</div>
+              </th>
+         
               <th scope="col">
                 <div class="text-center"></div>
               </th>
@@ -25,13 +32,15 @@
             </tr>
           </thead>
           <tbody>
-            {% for arriendo in arriendos %}
+            {% for data in libros_data %}
             <tr>
-                <td>{{ arriendo.libro.nombre }}</td>
-                <td>{{ arriendo.libro.autor }}</td>
-                <td>{{ arriendo.libro.categoria }}</td>
+                <td>{{ data.nombre }}</td>
+                <td>{{ data.autor }}</td>
+                <td>{{ data.categoria }}</td>
+                <td>{{ data.fecha_devolucion }}</td>
+                <td>${{ data.multa }}</td>
                 <td>
-                    <a href="{% url 'devolver' arriendo.libro.id %}" class="btn btn-info">Retornar</a>
+                    <a href="{% url 'devolver' data.id %}" class="btn btn-info">Retornar</a>
                 </td>
             </tr>
             {% endfor %}

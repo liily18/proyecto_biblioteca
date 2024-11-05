@@ -1,0 +1,15 @@
+<!-- agregar_libro.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Crea un Nuevo Libro</h2>
+    <form method="post" action="{% url 'agregar_libro' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Crear</button>
+    </form>
+</div>
+{% endblock %}
+
+
